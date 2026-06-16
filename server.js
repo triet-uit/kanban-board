@@ -195,29 +195,34 @@ const server = http.createServer((req, res) => {
         // Validate JSON before saving
         JSON.parse(body);
         
-        if (process.env.JSONBIN_KEY && process.env.JSONBIN_BIN_ID) {
-          saveToJSONBin(body, (err) => {
-            if (err) {
-              console.error('Error saving to JSONBin:', err);
-              res.writeHead(500, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Failed to write database to JSONBin' }));
-            } else {
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: true }));
-            }
-          });
-        } else {
-          fs.writeFile(DATA_FILE, body, 'utf8', (err) => {
-            if (err) {
-              console.error('Error saving data.json:', err);
-              res.writeHead(500, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Failed to write data file' }));
-            } else {
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: true }));
-            }
-          });
-        }
+          const parsed = JSON.parse(body);
+          const latestActivity = (parsed.activityLog && parsed.activityLog.length > 0) ? parsed.activityLog[0].text : 'No activity';
+          const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+          console.log(`[DATA] IP ${clientIp} performed: "${latestActivity}"`);
+
+          if (process.env.JSONBIN_KEY && process.env.JSONBIN_BIN_ID) {
+            saveToJSONBin(body, (err) => {
+              if (err) {
+                console.error('Error saving to JSONBin:', err);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Failed to write database to JSONBin' }));
+              } else {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true }));
+              }
+            });
+          } else {
+            fs.writeFile(DATA_FILE, body, 'utf8', (err) => {
+              if (err) {
+                console.error('Error saving data.json:', err);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Failed to write data file' }));
+              } else {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true }));
+              }
+            });
+          }
       } catch (e) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
