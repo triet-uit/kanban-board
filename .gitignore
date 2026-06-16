@@ -1,0 +1,5 @@
+tunnel.log
+node_modules/
+.DS_Store
+data.json
+# data.json is local database state, shouldn't be pushed to git to avoid conflict/overwriting server's database

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherBoard - Premium Kanban Workspace</title>
+  <meta name="description" content="A premium glassmorphic Kanban Board for visual project management and productivity.">
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- App Container -->
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="3" y="3" width="18" height="18" rx="4" />
+            <path d="M9 3v18M15 3v18" />
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>AetherBoard</h1>
+          <span class="subtext">Visual Workspace</span>
+        </div>
+      </div>
+
+      <!-- Quick Stats bar in header -->
+      <div class="header-quick-stats">
+        <div class="quick-stat-item" id="quick-stat-total">
+          <span class="stat-value">0</span>
+          <span class="stat-label">Tasks</span>
+        </div>
+        <div class="quick-stat-item" id="quick-stat-completed">
+          <span class="stat-value">0%</span>
+          <span class="stat-label">Done</span>
+        </div>
+        <div class="quick-stat-item" id="quick-stat-overdue">
+          <span class="stat-value text-danger">0</span>
+          <span class="stat-label">Overdue</span>
+        </div>
+      </div>
+
+      <!-- Header Controls -->
+      <div class="header-controls">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="search-input" placeholder="Search tasks..." autocomplete="off">
+        </div>
+
+        <div class="filter-dropdown-wrapper">
+          <select id="priority-filter" class="filter-select">
+            <option value="all">All Priorities</option>
+            <option value="high">🔴 High</option>
+            <option value="medium">🟡 Medium</option>
+            <option value="low">🟢 Low</option>
+          </select>
+        </div>
+
+        <button id="btn-add-task" class="btn btn-primary" title="Create New Task">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>New Task</span>
+        </button>
+
+        <button id="btn-add-column" class="btn btn-secondary" title="Add Column">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <line x1="12" y1="8" x2="12" y2="16"></line>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+          </svg>
+          <span>Column</span>
+        </button>
+
+        <button id="btn-dashboard" class="btn btn-icon" title="View Analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        </button>
+
+        <button id="btn-activity" class="btn btn-icon" title="Activity Log">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </button>
+
+        <button id="btn-theme-toggle" class="btn btn-icon" title="Toggle Light/Dark Theme">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Board Area -->
+    <main class="board-wrapper">
+      <div class="board-scroller">
+        <div class="board-canvas" id="board-canvas">
+          <!-- Columns will be injected dynamically by app.js -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- SLIDE OUT DRAWER: DASHBOARD -->
+  <aside id="drawer-dashboard" class="side-drawer">
+    <div class="drawer-header">
+      <h2>Analytics & Statistics</h2>
+      <button class="btn-drawer-close" id="btn-close-dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <!-- Radial Progress Widget -->
+      <div class="analytics-card progress-card">
+        <h3>Task Completion</h3>
+        <div class="progress-radial-wrapper">
+          <svg class="radial-progress-svg" viewBox="0 0 100 100">
+            <circle class="radial-bg" cx="50" cy="50" r="40" />
+            <circle class="radial-bar" cx="50" cy="50" r="40" id="radial-bar-completed" />
+          </svg>
+          <div class="radial-text">
+            <span id="dashboard-completion-percent">0%</span>
+            <span class="radial-subtext">Completed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Priority Distribution -->
+      <div class="analytics-card">
+        <h3>Priority Workload</h3>
+        <div class="priority-stats-bars">
+          <div class="bar-stat-item">
+            <div class="bar-header">
+              <span class="dot high"></span>
+              <span class="label">High</span>
+              <span class="val" id="stat-high-count">0</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill high" id="stat-high-bar" style="width: 0%"></div></div>
+          </div>
+          <div class="bar-stat-item">
+            <div class="bar-header">
+              <span class="dot medium"></span>
+              <span class="label">Medium</span>
+              <span class="val" id="stat-medium-count">0</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill medium" id="stat-medium-bar" style="width: 0%"></div></div>
+          </div>
+          <div class="bar-stat-item">
+            <div class="bar-header">
+              <span class="dot low"></span>
+              <span class="label">Low</span>
+              <span class="val" id="stat-low-count">0</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill low" id="stat-low-bar" style="width: 0%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workload by Column -->
+      <div class="analytics-card">
+        <h3>Tasks by Column</h3>
+        <div class="column-distribution-list" id="column-stats-container">
+          <!-- Dynamic bars will be rendered here -->
+        </div>
+      </div>
+
+      <!-- Overdue Tasks List -->
+      <div class="analytics-card warning-card">
+        <h3>Due Diligence & Overdue</h3>
+        <div id="overdue-tasks-list" class="overdue-list">
+          <div class="empty-state-sm">No tasks are overdue! Great job.</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- SLIDE OUT DRAWER: ACTIVITY LOG -->
+  <aside id="drawer-activity" class="side-drawer">
+    <div class="drawer-header">
+      <h2>Activity Timeline</h2>
+      <button class="btn-drawer-close" id="btn-close-activity">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <div class="activity-clear-wrapper">
+        <button id="btn-clear-activity" class="btn btn-text btn-danger">Clear History</button>
+      </div>
+      <div class="timeline" id="activity-timeline">
+        <!-- Activity items injected dynamically -->
+      </div>
+    </div>
+  </aside>
+
+  <!-- MODAL: ADD / EDIT TASK -->
+  <div id="modal-task-form" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 id="task-modal-title">Create New Task</h2>
+        <button class="btn-modal-close btn-close-modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <form id="task-form" class="modal-body">
+        <input type="hidden" id="task-form-id">
+        
+        <div class="form-group">
+          <label for="task-form-title">Task Title *</label>
+          <input type="text" id="task-form-title" placeholder="What needs to be done?" required autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label for="task-form-desc">Description</label>
+          <textarea id="task-form-desc" placeholder="Describe the details, goals, or requirements of this task..." rows="3"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="task-form-priority">Priority</label>
+            <select id="task-form-priority">
+              <option value="low">🟢 Low</option>
+              <option value="medium" selected>🟡 Medium</option>
+              <option value="high">🔴 High</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="task-form-column">Column</label>
+            <select id="task-form-column">
+              <!-- Dynamically populated options -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="task-form-date">Due Date</label>
+            <input type="date" id="task-form-date">
+          </div>
+
+          <div class="form-group">
+            <label for="task-form-tags">Tags (comma-separated)</label>
+            <input type="text" id="task-form-tags" placeholder="e.g. Design, Bug, UI" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Subtasks Builder Section -->
+        <div class="form-group subtasks-builder-section">
+          <label>Subtask Checklist</label>
+          <div class="subtask-input-row">
+            <input type="text" id="subtask-builder-input" placeholder="Add a checklist item..." autocomplete="off">
+            <button type="button" id="btn-add-subtask" class="btn btn-secondary">Add</button>
+          </div>
+          <ul class="subtasks-builder-list" id="subtask-builder-list">
+            <!-- Dynamically populated item list -->
+          </ul>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-task">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TASK DETAIL VIEW -->
+  <div id="modal-task-details" class="modal-overlay">
+    <div class="modal-container detail-modal">
+      <div class="modal-header">
+        <div class="detail-header-tags">
+          <span class="detail-priority-badge" id="detail-priority">High</span>
+          <span class="detail-column-badge" id="detail-column">In Progress</span>
+        </div>
+        <button class="btn-modal-close btn-close-modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <h2 class="detail-title" id="detail-title">Task Title</h2>
+        
+        <div class="detail-meta-grid">
+          <div class="detail-meta-item">
+            <span class="meta-label">DUE DATE</span>
+            <span class="meta-value" id="detail-date">-</span>
+          </div>
+          <div class="detail-meta-item">
+            <span class="meta-label">TAGS</span>
+            <div class="meta-value tags-flex" id="detail-tags">
+              <!-- Tags injected here -->
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Description</h3>
+          <p class="detail-description" id="detail-description">No description provided for this task.</p>
+        </div>
+
+        <!-- Interactive Checklist inside detail modal -->
+        <div class="detail-section">
+          <div class="detail-section-header">
+            <h3>Subtask Progress</h3>
+            <span id="detail-subtask-counter">0/0 Completed</span>
+          </div>
+          <div class="detail-progress-track">
+            <div class="detail-progress-bar" id="detail-subtask-progressbar" style="width: 0%"></div>
+          </div>
+          <ul class="detail-subtask-list" id="detail-subtask-list">
+            <!-- Active checkbox list of subtasks -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer detail-footer">
+        <div class="footer-left">
+          <button type="button" id="btn-detail-edit" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Edit
+          </button>
+          <button type="button" id="btn-detail-delete" class="btn btn-text btn-danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+            Delete
+          </button>
+        </div>
+        <button type="button" class="btn btn-primary btn-close-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT COLUMN -->
+  <div id="modal-column-form" class="modal-overlay">
+    <div class="modal-container col-modal">
+      <div class="modal-header">
+        <h2 id="column-modal-title">Add New Column</h2>
+        <button class="btn-modal-close btn-close-modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <form id="column-form" class="modal-body">
+        <input type="hidden" id="column-form-id">
+        
+        <div class="form-group">
+          <label for="column-form-title">Column Name *</label>
+          <input type="text" id="column-form-title" placeholder="e.g. Backlog, Testing" required autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label>Theme Accent Color</label>
+          <div class="color-picker-grid" id="column-color-picker">
+            <label class="color-option-container">
+              <input type="radio" name="col-color" value="var(--accent-purple)" checked>
+              <span class="color-preview" style="background: var(--accent-purple)"></span>
+            </label>
+            <label class="color-option-container">
+              <input type="radio" name="col-color" value="var(--accent-blue)">
+              <span class="color-preview" style="background: var(--accent-blue)"></span>
+            </label>
+            <label class="color-option-container">
+              <input type="radio" name="col-color" value="var(--accent-cyan)">
+              <span class="color-preview" style="background: var(--accent-cyan)"></span>
+            </label>
+            <label class="color-option-container">
+              <input type="radio" name="col-color" value="var(--accent-green)">
+              <span class="color-preview" style="background: var(--accent-green)"></span>
+            </label>
+            <label class="color-option-container">
+              <input type="radio" name="col-color" value="var(--accent-yellow)">
+              <span class="color-preview" style="background: var(--accent-yellow)"></span>
+            </label>
+            <label class="color-option-container">
+              <input type="radio" name="col-color" value="var(--accent-orange)">
+              <span class="color-preview" style="background: var(--accent-orange)"></span>
+            </label>
+            <label class="color-option-container">
+              <input type="radio" name="col-color" value="var(--accent-pink)">
+              <span class="color-preview" style="background: var(--accent-pink)"></span>
+            </label>
+            <label class="color-option-container">
+              <input type="radio" name="col-color" value="var(--accent-red)">
+              <span class="color-preview" style="background: var(--accent-red)"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Column</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dynamic notification toast wrapper -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Audio synthesiser system (App logic) -->
+  <script src="app.js"></script>
+</body>
+</html>
