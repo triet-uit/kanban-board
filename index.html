@@ -118,6 +118,14 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
         </button>
+
+        <button id="btn-logout" class="btn btn-icon btn-logout" title="Log Out">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -445,6 +453,40 @@
 
   <!-- Dynamic notification toast wrapper -->
   <div class="toast-container" id="toast-container"></div>
+
+  <!-- MODAL: LOGIN OVERLAY -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="3" y="3" width="18" height="18" rx="4" />
+            <path d="M9 3v18M15 3v18" />
+          </svg>
+        </div>
+        <h2>AetherBoard</h2>
+        <p>Enter workspace credentials to continue</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" required placeholder="e.g. Kydethuong" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div id="login-error-msg" class="login-error-msg"></div>
+        <button type="submit" class="btn btn-primary btn-login">
+          <span>Sign In</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- Audio synthesiser system (App logic) -->
   <script src="app.js"></script>

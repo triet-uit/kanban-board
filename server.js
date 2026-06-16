@@ -91,7 +91,7 @@ const server = http.createServer((req, res) => {
   // CORS Headers (just in case)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -99,29 +99,55 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // HTTP Basic Authentication
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    res.setHeader('WWW-Authenticate', 'Basic realm="AetherBoard Secure Workspace"');
-    res.writeHead(401, { 'Content-Type': 'text/plain' });
-    res.end('Unauthorized - Password Required');
+  // 1. API: Login
+  if (req.method === 'POST' && req.url === '/api/login') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        const { username, password } = JSON.parse(body);
+        if (username === 'Kydethuong' && password === '123456') {
+          const token = Buffer.from(`${username}:${password}`).toString('base64');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, token }));
+        } else {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid username or password' }));
+        }
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+      }
+    });
     return;
   }
 
-  const token = authHeader.split(' ')[1];
-  const decoded = Buffer.from(token, 'base64').toString('utf8');
-  const [username, password] = decoded.split(':');
+  // Helper to verify custom token (decoded from Bearer Auth header)
+  const verifyToken = () => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return false;
+    }
+    try {
+      const token = authHeader.split(' ')[1];
+      const decoded = Buffer.from(token, 'base64').toString('utf8');
+      const [username, password] = decoded.split(':');
+      return username === 'Kydethuong' && password === '123456';
+    } catch (e) {
+      return false;
+    }
+  };
 
-  // Configure Credentials (Default: admin / 123456)
-  if (username !== 'Kydethuong' || password !== '123456') {
-    res.setHeader('WWW-Authenticate', 'Basic realm="AetherBoard Secure Workspace"');
-    res.writeHead(401, { 'Content-Type': 'text/plain' });
-    res.end('Unauthorized - Invalid Username or Password');
-    return;
-  }
-
-  // 1. API: Get Data
+  // 2. API: Get Data
   if (req.method === 'GET' && req.url === '/api/data') {
+    if (!verifyToken()) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
     if (process.env.JSONBIN_KEY && process.env.JSONBIN_BIN_ID) {
       fetchFromJSONBin((err, data) => {
         if (err) {
@@ -148,8 +174,14 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 2. API: Save Data
+  // 3. API: Save Data
   if (req.method === 'POST' && req.url === '/api/data') {
+    if (!verifyToken()) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
     let body = '';
     req.on('data', chunk => {
       body += chunk.toString();

@@ -188,23 +188,72 @@ const DEFAULT_STATE = {
   theme: 'dark'
 };
 
+function showLoginOverlay() {
+  const overlay = document.getElementById('login-overlay');
+  if (overlay) {
+    overlay.classList.add('open');
+  }
+  const container = document.querySelector('.app-container');
+  if (container) {
+    container.style.filter = 'blur(10px) saturate(50%)';
+    container.style.pointerEvents = 'none';
+  }
+}
+
+function hideLoginOverlay() {
+  const overlay = document.getElementById('login-overlay');
+  if (overlay) {
+    overlay.classList.remove('open');
+  }
+  const container = document.querySelector('.app-container');
+  if (container) {
+    container.style.filter = '';
+    container.style.pointerEvents = 'auto';
+  }
+}
+
+function handleUnauthorized() {
+  localStorage.removeItem('aetherboard_token');
+  showLoginOverlay();
+  showToast('Authentication session expired or invalid', 'danger');
+}
+
 async function saveState() {
+  const token = localStorage.getItem('aetherboard_token');
+  if (!token) return;
   try {
-    await fetch('/api/data', {
+    const res = await fetch('/api/data', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(state)
     });
+    if (res.status === 401) {
+      handleUnauthorized();
+    }
   } catch (e) {
     console.error('Failed to save state to server:', e);
   }
 }
 
 async function loadState() {
+  const token = localStorage.getItem('aetherboard_token');
+  if (!token) {
+    showLoginOverlay();
+    return;
+  }
   try {
-    const res = await fetch('/api/data');
+    const res = await fetch('/api/data', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (res.status === 401) {
+      handleUnauthorized();
+      return;
+    }
     const data = await res.json();
     if (data && data.columns) {
       state = data;
@@ -1000,8 +1049,15 @@ function closeModal(modalId) {
 // Initialization & Event Listeners
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  // Load state from local server
-  await loadState();
+  // Check auth status
+  const token = localStorage.getItem('aetherboard_token');
+  if (!token) {
+    showLoginOverlay();
+  } else {
+    hideLoginOverlay();
+    // Load state from local server
+    await loadState();
+  }
 
   // Apply Theme
   const savedTheme = state.theme || 'dark';
@@ -1010,6 +1066,93 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Render initial panels
   renderBoard();
   renderActivityTimeline();
+
+  // Handle Login Form Submission
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const usernameInput = document.getElementById('login-username');
+      const passwordInput = document.getElementById('login-password');
+      const errorMsg = document.getElementById('login-error-msg');
+      const submitBtn = loginForm.querySelector('.btn-login');
+      
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+      
+      if (errorMsg) {
+        errorMsg.innerText = '';
+        errorMsg.classList.remove('shake');
+      }
+      
+      try {
+        if (submitBtn) submitBtn.disabled = true;
+        
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+          localStorage.setItem('aetherboard_token', data.token);
+          
+          // Clear form inputs
+          usernameInput.value = '';
+          passwordInput.value = '';
+          
+          // Success sequence
+          hideLoginOverlay();
+          showToast('Access Granted. Welcome to your Workspace! 🌟', 'success');
+          sfx.playCompletion();
+          
+          // Load state and render board
+          await loadState();
+          renderBoard();
+          renderActivityTimeline();
+        } else {
+          throw new Error(data.error || 'Authentication failed');
+        }
+      } catch (err) {
+        sfx.playTone(150, 0.15, sfx.ctx ? sfx.ctx.currentTime : 0);
+        if (errorMsg) {
+          errorMsg.innerText = err.message || 'Invalid username or password';
+          // Trigger shake animation
+          errorMsg.classList.remove('shake');
+          void errorMsg.offsetWidth; // Trigger reflow to restart animation
+          errorMsg.classList.add('shake');
+        }
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  }
+
+  // Handle Logout Button
+  const logoutBtn = document.getElementById('btn-logout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to sign out of this workspace?')) {
+        localStorage.removeItem('aetherboard_token');
+        
+        // Play click/thud SFX
+        sfx.playDrop();
+        
+        // Reset state so data is not exposed in DOM after logout
+        state = { columns: [], tasks: [], activityLog: [] };
+        renderBoard();
+        renderActivityTimeline();
+        
+        showLoginOverlay();
+        showToast('Successfully logged out', 'info');
+      }
+    });
+  }
 
   // Search filter
   const searchInput = document.getElementById('search-input');
