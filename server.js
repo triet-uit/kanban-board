@@ -3,8 +3,62 @@
  * Serves static files and reads/writes state to data.json
  */
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
+
+// Helper to fetch data from JSONBin.io
+function fetchFromJSONBin(callback) {
+  const options = {
+    hostname: 'api.jsonbin.io',
+    path: `/v3/b/${process.env.JSONBIN_BIN_ID}/latest`,
+    method: 'GET',
+    headers: {
+      'X-Master-Key': process.env.JSONBIN_KEY,
+      'X-Bin-Meta': 'false'
+    }
+  };
+  const req = https.request(options, res => {
+    let data = '';
+    res.on('data', chunk => data += chunk);
+    res.on('end', () => {
+      if (res.statusCode !== 200) {
+        callback(new Error(`JSONBin error status ${res.statusCode}: ${data}`));
+      } else {
+        callback(null, data);
+      }
+    });
+  });
+  req.on('error', err => callback(err));
+  req.end();
+}
+
+// Helper to save data to JSONBin.io
+function saveToJSONBin(body, callback) {
+  const options = {
+    hostname: 'api.jsonbin.io',
+    path: `/v3/b/${process.env.JSONBIN_BIN_ID}`,
+    method: 'PUT',
+    headers: {
+      'X-Master-Key': process.env.JSONBIN_KEY,
+      'Content-Type': 'application/json'
+    }
+  };
+  const req = https.request(options, res => {
+    let data = '';
+    res.on('data', chunk => data += chunk);
+    res.on('end', () => {
+      if (res.statusCode !== 200) {
+        callback(new Error(`JSONBin error status ${res.statusCode}: ${data}`));
+      } else {
+        callback(null);
+      }
+    });
+  });
+  req.on('error', err => callback(err));
+  req.write(body);
+  req.end();
+}
 
 const PORT = process.env.PORT || 8089;
 let DATA_FILE = process.env.DATA_PATH || path.join(__dirname, 'data.json');
@@ -68,16 +122,29 @@ const server = http.createServer((req, res) => {
 
   // 1. API: Get Data
   if (req.method === 'GET' && req.url === '/api/data') {
-    fs.readFile(DATA_FILE, 'utf8', (err, data) => {
-      if (err) {
-        // If file doesn't exist, return empty object so app uses defaults
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({}));
-      } else {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(data);
-      }
-    });
+    if (process.env.JSONBIN_KEY && process.env.JSONBIN_BIN_ID) {
+      fetchFromJSONBin((err, data) => {
+        if (err) {
+          console.error('Error fetching from JSONBin:', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to read database from JSONBin' }));
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(data);
+        }
+      });
+    } else {
+      fs.readFile(DATA_FILE, 'utf8', (err, data) => {
+        if (err) {
+          // If file doesn't exist, return empty object so app uses defaults
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({}));
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(data);
+        }
+      });
+    }
     return;
   }
 
@@ -91,16 +158,30 @@ const server = http.createServer((req, res) => {
       try {
         // Validate JSON before saving
         JSON.parse(body);
-        fs.writeFile(DATA_FILE, body, 'utf8', (err) => {
-          if (err) {
-            console.error('Error saving data.json:', err);
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Failed to write data file' }));
-          } else {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true }));
-          }
-        });
+        
+        if (process.env.JSONBIN_KEY && process.env.JSONBIN_BIN_ID) {
+          saveToJSONBin(body, (err) => {
+            if (err) {
+              console.error('Error saving to JSONBin:', err);
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Failed to write database to JSONBin' }));
+            } else {
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true }));
+            }
+          });
+        } else {
+          fs.writeFile(DATA_FILE, body, 'utf8', (err) => {
+            if (err) {
+              console.error('Error saving data.json:', err);
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Failed to write data file' }));
+            } else {
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true }));
+            }
+          });
+        }
       } catch (e) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
