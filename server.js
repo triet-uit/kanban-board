@@ -87,6 +87,8 @@ const MIME_TYPES = {
   '.webp': 'image/webp'
 };
 
+const loggedActivityIds = new Set();
+
 const server = http.createServer((req, res) => {
   // CORS Headers (just in case)
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -196,9 +198,17 @@ const server = http.createServer((req, res) => {
         JSON.parse(body);
         
           const parsed = JSON.parse(body);
-          const latestActivity = (parsed.activityLog && parsed.activityLog.length > 0) ? parsed.activityLog[0].text : 'No activity';
+          const latestActivity = (parsed.activityLog && parsed.activityLog.length > 0) ? parsed.activityLog[0] : null;
           const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-          console.log(`[DATA] IP ${clientIp} performed: "${latestActivity}"`);
+
+          if (latestActivity && !loggedActivityIds.has(latestActivity.id)) {
+            loggedActivityIds.add(latestActivity.id);
+            if (loggedActivityIds.size > 500) {
+              const iterator = loggedActivityIds.keys();
+              loggedActivityIds.delete(iterator.next().value);
+            }
+            console.log(`[DATA] IP ${clientIp} performed: "${latestActivity.text}"`);
+          }
 
           if (process.env.JSONBIN_KEY && process.env.JSONBIN_BIN_ID) {
             saveToJSONBin(body, (err) => {
