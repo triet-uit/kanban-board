@@ -1113,6 +1113,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           
           // Load state and render board
           await loadState();
+          logActivity(`User "${username}" signed in to workspace`);
+          await saveState();
           renderBoard();
           renderActivityTimeline();
         } else {

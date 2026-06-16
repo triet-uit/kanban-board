@@ -109,10 +109,14 @@ const server = http.createServer((req, res) => {
       try {
         const { username, password } = JSON.parse(body);
         if (username === 'Kydethuong' && password === '123456') {
+          const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+          console.log(`[AUTH] Login success: User "${username}" from IP ${clientIp} at ${new Date().toLocaleString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh'})}`);
           const token = Buffer.from(`${username}:${password}`).toString('base64');
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, token }));
         } else {
+          const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+          console.warn(`[AUTH] Login failed: Attempted Username "${username}" from IP ${clientIp} at ${new Date().toLocaleString('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh'})}`);
           res.writeHead(401, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Invalid username or password' }));
         }
