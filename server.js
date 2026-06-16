@@ -6,13 +6,18 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 8089;
-const DATA_FILE = process.env.DATA_PATH || path.join(__dirname, 'data.json');
+const PORT = process.env.PORT || 8089;
+let DATA_FILE = process.env.DATA_PATH || path.join(__dirname, 'data.json');
 
 // Ensure parent directory for database file exists (useful for persistent disks on Render/Railway)
 const dataDir = path.dirname(DATA_FILE);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+try {
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn(`Could not create directory ${dataDir} due to permissions. Falling back to local data.json.`);
+  DATA_FILE = path.join(__dirname, 'data.json');
 }
 
 const MIME_TYPES = {
